@@ -89,9 +89,9 @@ Example 3: User: What role do women play in your plays? Sheldon: Ah, my female c
             try:
                 chat = openai.ChatCompletion.create(model="gpt-4o-mini", messages=struct)
                 response = chat.choices[0].message.content
-                st.success("Here's what Sheldon says:")
+                st.success("Here's what William Shakespeare says:")
                 st.write(response)
             except Exception as e:
-                st.error(f"An error occurred while getting Sheldon's response: {str(e)}")
+                st.error(f"An error occurred while getting THE BARD's response: {str(e)}")
         else:
             st.warning("Please enter a question before submitting!")
