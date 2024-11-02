@@ -87,7 +87,7 @@ Example 3: User: What role do women play in your plays? Sheldon: Ah, my female c
             struct.append({"role": "user", "content": user_question})
 
             try:
-                chat = openai.ChatCompletion.create(model="gpt-40-mini", messages=struct)
+                chat = openai.ChatCompletion.create(model="gpt-4o-mini", messages=struct)
                 response = chat.choices[0].message.content
                 st.success("Here's what Sheldon says:")
                 st.write(response)
