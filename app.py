@@ -65,9 +65,9 @@ if options == "Home":
 
 elif options == "About Me":
     st.title('About Me')
-    st.subheader("William Shakespeare, the "Bard of Avon," led a life of creative genius, leaving behind an unparalleled legacy in literature and drama.")
+    st.subheader("William Shakespeare, the Bard of Avon, led a life of creative genius, leaving behind an unparalleled legacy in literature and drama.")
     st.write("# Meet William Shakespeare or 'THE BARD'")
-    st.markdown("William Shakespeare (1564–1616) was an English playwright, poet, and actor, often regarded as one of the greatest writers in the English language. Known as the Bard of Avon, he produced a remarkable body of work that includes 39 plays, 154 sonnets, and two narrative poems. His plays, spanning comedies, tragedies, and histories, delve into timeless themes like love, power, ambition, and betrayal. Iconic works such as Hamlet, Romeo and Juliet, Macbeth, and A Midsummer Night's Dream have left a lasting impact on literature and theatre. Shakespeare’s influence endures through his profound insights into human nature, rich language, and enduring relevance.")
+    st.markdown("William Shakespeare (1564–1616) was an English playwright, poet, and actor, often regarded as one of the greatest writers in the English language. He produced a remarkable body of work that includes 39 plays, 154 sonnets, and two narrative poems. His plays, spanning comedies, tragedies, and histories, delve into timeless themes like love, power, ambition, and betrayal. Iconic works such as Hamlet, Romeo and Juliet, Macbeth, and A Midsummer Night's Dream have left a lasting impact on literature and theatre. Shakespeare’s influence endures through his profound insights into human nature, rich language, and enduring relevance.")
     st.markdown("Know more about William Shakespeare: https://www.shakespeare.org.uk/explore-shakespeare/shakespedia/william-shakespeare/william-shakespeare-biography/")
     st.write("\n")
 
