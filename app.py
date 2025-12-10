@@ -6,7 +6,6 @@ import json
 import warnings
 import streamlit as st
 from streamlit_option_menu import option_menu
-from streamlit_extras.mention import mention
 import requests
 from langchain_openai import ChatOpenAI  
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
