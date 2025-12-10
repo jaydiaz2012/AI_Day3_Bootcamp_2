@@ -99,7 +99,7 @@ elif options == "Ask William":
             try:
                 with st.spinner("William is composing his reply..."):
                     response = openai.ChatCompletion.create(
-                        model="gpt-4o-mini",
+                        model="gpt-4o",
                         messages=st.session_state.messages,
                         temperature=0.7,
                         max_tokens=800
