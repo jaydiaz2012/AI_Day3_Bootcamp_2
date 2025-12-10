@@ -1,106 +1,125 @@
+# app.py
 import os
 import openai
-import numpy as np
-import pandas as pd
-import json
-import warnings
 import streamlit as st
-from streamlit_option_menu import option_menu
-import requests
-from langchain_openai import ChatOpenAI  
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain_core.output_parsers import StrOutputParser
-from langchain_core.runnables import RunnablePassthrough
-from langchain.memory import ConversationBufferMemory
+import warnings
 
 warnings.filterwarnings("ignore")
 
+# --- Page config ---
 st.set_page_config(page_title="The Shakespeare Bot: Ask William Anything!", page_icon="🎭", layout="wide")
 
+# --- Sidebar / API key input ---
 with st.sidebar:
     st.image('images/logo1.png')
     st.image('images/logo0.png')
-    api_key = st.text_input("Enter your OpenAI API Token:", type="password")
 
-    if not (api_key.startswith("sk-") and len(api_key) > 40):
-        st.warning("Please enter your OpenAI API token!", icon="⚠️")
+    api_key = st.text_input("Enter your OpenAI API token:", type="password")
+    if api_key and (api_key.startswith("sk-") and len(api_key) > 40):
+        st.success("API key looks good. Proceed to Ask William.", icon="👉")
+    elif api_key:
+        st.warning("The API token does not appear valid. It should start with 'sk-'.", icon="⚠️")
     else:
-        st.success("Proceed to ask The Bard your question!", icon="👉")    
-        
-    with st.container() :
-        l, m, r = st.columns((1, 3, 1))
-        with l : st.empty()
-        with m : st.empty()
-        with r : st.empty()
+        st.info("Enter your OpenAI API key to use the chatbot.", icon="ℹ️")
 
-    options = option_menu(
-        "Dashboard",
-        ["Home", "About Me", "Ask William"],
-        icons=['book', 'info-circle', 'question-circle'],
-        menu_icon="cast",
-        default_index=0,
-        styles={
-            "icon": {"color": "#dec960", "font-size": "20px"},
-            "nav-link": {"font-size": "17px", "text-align": "left", "margin": "5px", "--hover-color": "#262730"},
-            "nav-link-selected": {"background-color": "#262730"}
-        }
-    )
+    # small spacer
+    st.markdown("---")
+    options = st.radio("Dashboard", ("Home", "About Me", "Ask William"))
 
+# --- Initialize session state for messages ---
 if 'messages' not in st.session_state:
+    # seed with system prompt so model always sees it
     st.session_state.messages = []
 
-# Options : Home
+# --- System prompt (keeps the Bard persona) ---
+SYSTEM_PROMPT = """You are William Shakespeare, the exceptionally brilliant and literary genius of the English drama and the English language.
+You possess an extensive knowledge of your plays and sonnets. Your mission: to answer questions in a way that’s not only highly informative but infused with your distinct blend of overconfidence, dry English humour, and nerdy references.
+Deliver accurate literary answers, from basics to advanced inquiries, with precision and a touch of flair. Stay focused on questions about Shakespeare's works. Keep explanations thorough yet focused.
+"""
+
+# --- Pages ---
 if options == "Home":
     st.title('The Shakespeare Bot')
     st.markdown("<p style='color:red; font-weight:bold;'>Note: You need to enter your OpenAI API token to use this tool.</p>", unsafe_allow_html=True)
     st.write("Welcome to the Shakespeare Bot, where you can ask William Shakespeare anything about his plays and sonnets!")
     st.write("## How It Works")
-    st.write("Simply type in your question, and let THE BARD enlighten you with his vast knowledge and unique perspective.")
+    st.write("Type a question and the model will respond in the persona of William Shakespeare.")
 
 elif options == "About Me":
-    st.title('About Me')
-    st.subheader("William Shakespeare, the Bard of Avon, led a life of creative genius, leaving behind an unparalleled legacy in literature and drama.")
-    st.write("# Meet William Shakespeare or 'THE BARD'")
-    st.markdown("William Shakespeare (1564–1616) was an English playwright, poet, and actor, often regarded as one of the greatest writers in the English language. He produced a remarkable body of work that includes 39 plays, 154 sonnets, and two narrative poems. His plays, spanning comedies, tragedies, and histories, delve into timeless themes like love, power, ambition, and betrayal. Iconic works such as Hamlet, Romeo and Juliet, Macbeth, and A Midsummer Night's Dream have left a lasting impact on literature and theatre. Shakespeare’s influence endures through his profound insights into human nature, rich language, and enduring relevance.")
-    st.markdown("Know more about William Shakespeare: https://www.shakespeare.org.uk/explore-shakespeare/shakespedia/william-shakespeare/william-shakespeare-biography/")
+    st.title('About William Shakespeare (THE BARD)')
+    st.write("William Shakespeare (1564–1616) was an English playwright, poet, and actor, often regarded as one of the greatest writers in the English language.")
+    st.write("He wrote plays, sonnets, and narrative poems exploring themes such as love, power, ambition and betrayal.")
+    st.markdown("Learn more: https://www.shakespeare.org.uk/")
     st.write("\n")
 
 elif options == "Ask William":
     st.title('Ask William Shakespeare!')
-    user_question = st.text_input("What's your burning question?")
-    System_Prompt = """ You are William Shakespeare, the exceptionally brilliant and literary genius of the English drama and the English language. You possess an extensive knowledge of your plays and sonnets. Your mission: to answer questions in a way that’s not only highly informative but infused with your distinct blend of overconfidence, dry English humor, and nerdy references. Your responses should reflect your uncompromising pursuit of accuracy, but also your unique (and often hilarious) personality quirks that make you, well, William Shakespeare.
+    user_question = st.text_input("What's your burning question?", key="user_input")
 
-Instructions: Deliver meticulously accurate literary answers, from the basics to the more advanced inquiries, with precision and a touch of flair. Dive deep into explanations whenever possible, sprinkling in elaborate analogies, pop culture references, or comparisons to well-known scientific phenomena. Do not hesitate to point out inaccuracies in questions, and gently (or not-so-gently) correct any misconceptions. Your love of facts and need for clarity is paramount. Inject your trademark wit, enthusiasm, and a dash of haughtiness; make answers memorable and fun without losing sight of scientific accuracy. Just remember: while a certain amount of humorous digression is welcome, your answers should always orbit around science.
+    # display conversation history
+    if st.session_state.messages:
+        st.markdown("### Conversation")
+        for msg in st.session_state.messages:
+            if msg["role"] == "user":
+                st.markdown(f"**You:** {msg['content']}")
+            elif msg["role"] == "assistant":
+                st.markdown(f"**William Shakespeare:** {msg['content']}")
 
-Context: Users come to you with a wide range of literary questions about your body of work including sonnets, from your Comedy plays to your Historical plays. Some users may be beginners seeking simple explanations, while others may be more advanced learners aiming to discuss intricate literary concepts and devices. Tailor responses to each user's level with varying degrees of detail, but make sure every answer carries that unmistakable Shakespeare brilliance.
+    col1, col2, col3 = st.columns([1,1,1])
+    with col1:
+        submit = st.button("Submit")
+    with col2:
+        clear = st.button("Clear conversation")
+    with col3:
+        st.write("")  # placeholder
 
-Constraints: Stay focused on questions about Shakespeare's works—no tangents about other unrelated topics. Avoid discussing topics outside the realm of English literature; however, general nerdy references are encouraged. Keep explanations thorough yet focused, without digressing too far from the user’s initial question (unless you simply must point out a fascinating tangent).
+    # Clear conversation
+    if clear:
+        st.session_state.messages = []
+        st.experimental_rerun()
 
-Examples: Example 1: User: What is the basic theme of the play, Romeo and Juliet? William Shakespeare: The central theme of Romeo and Juliet is the power and tragedy of love. The play explores the intense, passionate love between Romeo and Juliet, set against a backdrop of family rivalry and conflict. Their love, which defies their families' hatred, ultimately leads to both transcendent beauty and devastating loss, as they struggle to be together despite the forces that tear them apart!
-
-Example 2: User: How does Shakespeare use language, especially in terms of verse and prose? William Shakespeare: I use iambic pentameter and shifts between verse and prose to signify social class, character emotion, or narrative shifts. Exploring this can help me in analyzing characters and plot
-
-Example 3: User: What role do women play in your plays? Sheldon: Ah, my female characters, often complex and strong, reveal societal views on gender and challenge norms of my time. Allow me to clarify: female roles reflect the women in Elizabethan society who are largely expected to be obedient, passive, and subservient to men. I created a wide range of female characters who challenge these norms, each uniquely exploring themes of identity, autonomy, and agency. 
-
-"""
-    if api_key and api_key.startswith("sk-"):
-        llm= ChatOpenAI(
-            model = "gpt-4o-mini",
-            temperature = 0.7,
-            api_key=api_key,
-            max_retries=2
-        )
-        
-        if st.button("Submit"):
-            if user_question.strip():
-                try:
-                    response = chain.invoke(user_question)
-                    st.success("Here's what The Bard says:")
-                    st.write(response)
-
-                except Exception as e:
-                    st.error(f"Error: {e}")
-            else:
-                st.warning("Please enter a question before submitting.")
+    # Validate API key presence before calling OpenAI
+    if submit:
+        if not api_key or not api_key.startswith("sk-"):
+            st.warning("Enter a valid OpenAI API key in the sidebar before submitting.")
+        elif not user_question or not user_question.strip():
+            st.warning("Please enter a question before submitting.")
         else:
-            st.warning("Enter your valid OpenAI API key to start chatting.")
+            # prepare messages: include system prompt at the start (if not already)
+            if not any(m['role'] == 'system' for m in st.session_state.messages):
+                st.session_state.messages.insert(0, {"role": "system", "content": SYSTEM_PROMPT})
+
+            # append user message
+            st.session_state.messages.append({"role": "user", "content": user_question.strip()})
+
+            # set key for openai
+            openai.api_key = api_key
+
+            # call the API (synchronous)
+            try:
+                with st.spinner("William is composing his reply..."):
+                    response = openai.ChatCompletion.create(
+                        model="gpt-4o-mini",
+                        messages=st.session_state.messages,
+                        temperature=0.7,
+                        max_tokens=800
+                    )
+
+                assistant_message = response["choices"][0]["message"]["content"].strip()
+
+                # append assistant reply to history and display
+                st.session_state.messages.append({"role": "assistant", "content": assistant_message})
+
+                st.success("Here's what The Bard says:")
+                st.write(assistant_message)
+
+            except Exception as e:
+                st.error(f"OpenAI request failed: {e}")
+
+    # if no submit yet, show hint
+    if not submit:
+        st.info("Type a question and press Submit. Press 'Clear conversation' to start over.")
+
+# Footer / small note
+st.markdown("---")
+st.caption("Built for demonstration. Keep questions focused on Shakespeare's works.")
