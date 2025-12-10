@@ -1,4 +1,4 @@
-openai
+openai>=1.0.0
 streamlit==1.32.1
 pip==25.2
 streamlit_option_menu
@@ -6,6 +6,3 @@ langchain-core
 langchain==0.3.7
 langchain-openai==0.3.0
 langchain_community
-scipy
-scikit-learn
-newspaper3k==0.2.8
