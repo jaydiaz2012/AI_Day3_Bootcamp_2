@@ -3,21 +3,16 @@ import openai
 import numpy as np
 import pandas as pd
 import json
-from langchain.chat_models import ChatOpenAI
-from langchain.document_loaders import CSVLoader
-from langchain.embeddings import OpenAIEmbeddings
-from langchain.prompts import ChatPromptTemplate
-from langchain.vectorstores import Chroma
-from langchain_core.output_parsers import StrOutputParser
-from langchain_core.runnables import RunnableLambda, RunnablePassthrough
-from openai.embeddings_utils import get_embedding
-import faiss
-import streamlit as st
 import warnings
+import streamlit as st
 from streamlit_option_menu import option_menu
 from streamlit_extras.mention import mention
 import requests
-from bs4 import BeautifulSoup
+from langchain_openai import ChatOpenAI  
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.runnables import RunnablePassthrough
+from langchain.memory import ConversationBufferMemory
 
 warnings.filterwarnings("ignore")
 
@@ -92,15 +87,24 @@ Example 2: User: How does Shakespeare use language, especially in terms of verse
 Example 3: User: What role do women play in your plays? Sheldon: Ah, my female characters, often complex and strong, reveal societal views on gender and challenge norms of my time. Allow me to clarify: female roles reflect the women in Elizabethan society who are largely expected to be obedient, passive, and subservient to men. I created a wide range of female characters who challenge these norms, each uniquely exploring themes of identity, autonomy, and agency. 
 
 """
-            struct = [{'role': 'system', 'content': System_Prompt}]
-            struct.append({"role": "user", "content": user_question})
+    if api_key and api_key.startswith("sk-"):
+        llm= ChatOpenAI(
+            model = "gpt-4o-mini",
+            temperature = 0.7,
+            api_key=api_key,
+            max_retries=2
+        )
 
-            try:
-                chat = openai.ChatCompletion.create(model="gpt-4o-mini", messages=struct)
-                response = chat.choices[0].message.content
-                st.success("Here's what William Shakespeare says:")
-                st.write(response)
-            except Exception as e:
-                st.error(f"An error occurred while getting THE BARD's response: {str(e)}")
+     if st.button("Submit"):
+            if user_question.strip():
+                try:
+                    response = chain.invoke(user_question)
+                    st.success("Here's what The Bard says:")
+                    st.write(response)
+
+                except Exception as e:
+                    st.error(f"Error: {e}")
+            else:
+                st.warning("Please enter a question before submitting.")
         else:
-            st.warning("Please enter a question before submitting!")
+            st.warning("Enter your valid OpenAI API key to start chatting.")
