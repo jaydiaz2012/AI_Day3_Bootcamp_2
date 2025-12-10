@@ -21,13 +21,13 @@ st.set_page_config(page_title="The Shakespeare Bot: Ask William Anything!", page
 with st.sidebar:
     st.image('images/logo1.png')
     st.image('images/logo0.png')
-    
-    openai.api_key = st.text_input('Enter OpenAI API token:', type='password')
-    if not (openai.api_key.startswith('sk-') and len(openai.api_key) == 164):
-        st.warning('Please enter your OpenAI API token!', icon='⚠️')
-    else:
-        st.success('Proceed to ask William Shakespeare your question!', icon='👉')
+    api_key = st.text_input("Enter your OpenAI API Token:", type="password")
 
+    if not (api_key.startswith("sk-") and len(api_key) > 40):
+        st.warning("Please enter your OpenAI API token!", icon="⚠️")
+    else:
+        st.success("Proceed to ask The Bard your question!", icon="👉")    
+        
     with st.container() :
         l, m, r = st.columns((1, 3, 1))
         with l : st.empty()
