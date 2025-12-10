@@ -94,8 +94,8 @@ Example 3: User: What role do women play in your plays? Sheldon: Ah, my female c
             api_key=api_key,
             max_retries=2
         )
-
-     if st.button("Submit"):
+        
+        if st.button("Submit"):
             if user_question.strip():
                 try:
                     response = chain.invoke(user_question)
